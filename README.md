@@ -23,7 +23,10 @@ fade_out_seconds = 1.5  # 淡出动画时长（秒）
 
 修改并保存后，重启生效。
 
-## 编译运行
+## 运行
+前往[Releases](./../../releases)界面下载最新版本，启动即可。**需要`.NET9`运行时。**
+
+### 编译
 ```bash
 git clone https://github.com/qmazon/TwentyTwentyTwenty.git
 ```
