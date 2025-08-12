@@ -15,7 +15,7 @@ public class AppSettings
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "TwentyTwentyTwenty");
 
-    private static readonly string FilePath =
+    public static readonly string FilePath =
         Path.Combine(DirPath, "settings.toml");
 
     public static AppSettings Load()
