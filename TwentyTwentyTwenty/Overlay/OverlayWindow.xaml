@@ -1,0 +1,31 @@
+﻿<Window x:Class="TwentyTwentyTwenty.Overlay.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TwentyTwentyTwenty"
+        xmlns:overlay="clr-namespace:TwentyTwentyTwenty.Overlay"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        WindowState="Maximized"
+        Topmost="True"
+        AllowsTransparency="True"
+        Background="#00000000"
+        Opacity="0"
+        ShowInTaskbar="False"
+        Title="OverlayWindow"
+        Loaded="OverlayWindow_Loaded" >
+
+    <Grid Background="#60000000">
+        <Border CornerRadius="16"
+                Background="#80000000"
+                Margin="32"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top">
+            <TextBlock x:Name="CountText"
+                       Margin="16 8 16 8"
+                       Foreground="Cyan"
+                       FontSize="56" />
+        </Border>
+    </Grid>
+</Window>
