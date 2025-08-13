@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Hardcodet.Wpf.TaskbarNotification;
 using log4net;
+using Microsoft.Win32;
 using TwentyTwentyTwenty.Data;
 using TwentyTwentyTwenty.Overlay;
 using Timer = System.Timers.Timer;
@@ -84,7 +85,8 @@ public partial class App : INotifyPropertyChanged
             (_, _) => UpdateToolTip(),
             Dispatcher);
         ResetTimer();
-
+        
+        SystemEvents.SessionSwitch += OnSessionSwitch;
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
     }
 
@@ -109,6 +111,31 @@ public partial class App : INotifyPropertyChanged
         _nextTick = DateTime.Now.AddMilliseconds(_timer!.Interval);
         _timer.Start();
     }
+    
+    private void OnSessionSwitch(object? sender, SessionSwitchEventArgs e)
+    {
+        switch (e.Reason)
+        {
+            case SessionSwitchReason.SessionLock:
+                Log.Info("Workstation locked – pausing timer.");
+                _timer?.Stop();
+                break;
+            case SessionSwitchReason.SessionUnlock:
+                Log.Info("Workstation unlocked – resuming timer.");
+                ResetTimer();
+                break;
+            case SessionSwitchReason.ConsoleConnect:
+            case SessionSwitchReason.ConsoleDisconnect:
+            case SessionSwitchReason.RemoteConnect:
+            case SessionSwitchReason.RemoteDisconnect:
+            case SessionSwitchReason.SessionLogon:
+            case SessionSwitchReason.SessionLogoff:
+            case SessionSwitchReason.SessionRemoteControl:
+            default:
+                return;
+        }
+    }
+
 
     private void UpdateToolTip()
     {
@@ -168,6 +195,7 @@ public partial class App : INotifyPropertyChanged
     private void App_OnExit(object sender, ExitEventArgs e)
     {
         Log.Info("App OnExit");
+        SystemEvents.SessionSwitch -= OnSessionSwitch;
 
         if (_mutexOwned)
         {
