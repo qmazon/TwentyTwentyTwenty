@@ -107,9 +107,13 @@ public partial class OverlayWindow
             To   = 0,
             Duration = FadeOutDuration
         };
+        
+        Left   = SystemParameters.VirtualScreenLeft;
+        Top    = SystemParameters.VirtualScreenTop;
+        Width  = SystemParameters.VirtualScreenWidth;
+        Height = SystemParameters.VirtualScreenHeight;
     }
 
-// todo 不抢焦点
     private void OverlayWindow_Loaded(object sender, RoutedEventArgs e)
     {
         Log.Info("Start the overlay.");
