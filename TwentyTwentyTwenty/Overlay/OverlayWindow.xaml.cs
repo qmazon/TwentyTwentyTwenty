@@ -109,16 +109,17 @@ public partial class OverlayWindow
         };
     }
 
+// todo 不抢焦点
     private void OverlayWindow_Loaded(object sender, RoutedEventArgs e)
     {
         Log.Info("Start the overlay.");
-        
+
         FadeIn.Completed += (_, _) => _timer.Start();
         FadeOut.Completed += FadeOut_OnCompleted;
         CountText.Text = RestSeconds.ToString();
         BeginAnimation(OpacityProperty, FadeIn);
         // FadeIn.Begin(this);
-        
+
         // 获取窗口句柄
         var hWnd = new WindowInteropHelper(this).Handle;
         // 设置窗口样式，使其透明且不响应鼠标和键盘事件

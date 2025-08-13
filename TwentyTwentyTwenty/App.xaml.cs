@@ -31,7 +31,6 @@ public partial class App : INotifyPropertyChanged
     private DateTime _nextTick;
     private TaskbarIcon? _tray;
     private Timer? _timer;
-    private readonly AppSettings _settings = AppSettings.Load();
 
     private string _toolTipText = "20-20-20";
 
@@ -46,8 +45,21 @@ public partial class App : INotifyPropertyChanged
         }
     }
 
+    private AppSettings Settings { get; set; } = null!;
+
     protected override void OnStartup(StartupEventArgs e)
     {
+        try
+        {
+            Settings = AppSettings.Load();
+        }
+        catch (ArgumentException ex)
+        {
+            MessageBox.Show(ex.Message, "配置错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+            return;
+        }
+        
         _mutex = new Mutex(true, "TwentyTwentyTwenty_SingleInstance", out var createdNew);
         _mutexOwned = createdNew;
         if (!createdNew)
@@ -63,7 +75,7 @@ public partial class App : INotifyPropertyChanged
         _tray = (TaskbarIcon)FindResource("TrayIcon")!;
         _tray.Visibility = Visibility.Visible;
 
-        _timer = new Timer(TimeSpan.FromMinutes(_settings.IntervalMinutes));
+        _timer = new Timer(TimeSpan.FromMinutes(Settings.IntervalMinutes));
         _timer.Elapsed += (_, _) => Dispatcher.Invoke(ResetAndShow);
         // 1 秒更新 1 次托盘。timer 被 Dispatcher 引用，不会被 GC
         _ = new DispatcherTimer(
@@ -80,7 +92,7 @@ public partial class App : INotifyPropertyChanged
     {
         Log.Info("Method: ShowOverlay");
         _window?.Close();
-        _window = new OverlayWindow(CurrentApp._settings);
+        _window = new OverlayWindow(CurrentApp.Settings);
         _window.Show();
     }
 
@@ -164,7 +176,7 @@ public partial class App : INotifyPropertyChanged
             _mutexOwned = false;
         }
 
-        _mutex!.Dispose();
+        _mutex?.Dispose();
         // base.OnExit(e);
     }
 
