@@ -11,6 +11,7 @@ public class AppSettings
     public int RestSeconds { get; set; } = 20;
     public double FadeInSeconds { get; set; } = 1.5;
     public double FadeOutSeconds { get; set; } = 1.5;
+    public double EscapeNextMinutes { get; set; } = 2.0;
 
     private static readonly string DirPath =
         Path.Combine(
@@ -45,13 +46,15 @@ public class AppSettings
         var restSeconds = ReadInt32(tbl, "rest_seconds");
         var fadeIn = ReadDouble(tbl, "fade_in_seconds");
         var fadeOut = ReadDouble(tbl, "fade_out_seconds");
+        var escape = ReadDouble(tbl, "escape_next_minutes");
 
         var settings = new AppSettings
         {
             IntervalMinutes = intervalMinutes,
             RestSeconds = restSeconds,
             FadeInSeconds = fadeIn,
-            FadeOutSeconds = fadeOut
+            FadeOutSeconds = fadeOut,
+            EscapeNextMinutes = escape
         };
 
         Validate(settings);
@@ -123,6 +126,11 @@ public class AppSettings
             throw new ArgumentOutOfRangeException(
                 nameof(s.FadeOutSeconds),
                 "fade_out_seconds 必须是 0.0~5.0 之间的非负数。");
+        
+        if (s.EscapeNextMinutes > s.IntervalMinutes || s.EscapeNextMinutes <= s.FadeOutSeconds / 60.0)
+            throw new ArgumentOutOfRangeException(
+                nameof(s.EscapeNextMinutes),
+                "escape_next_minutes 必须不大于 interval_minutes、大于 fade_out_seconds。");
 
         var totalSeconds = s.FadeInSeconds + s.FadeOutSeconds + s.RestSeconds;
         if (totalSeconds >= s.IntervalMinutes * 60)
