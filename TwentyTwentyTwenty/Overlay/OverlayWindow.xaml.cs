@@ -68,8 +68,10 @@ public partial class OverlayWindow
     private static IntPtr _hookID = IntPtr.Zero;
     internal static OverlayWindow? Instance; // 让钩子回调里能拿到窗口实例
     private static readonly ILog Log = LogManager.GetLogger(typeof(OverlayWindow));
+
+    // todo color
+    internal static ColorAnimation CyanToGold { get; } = new(Colors.Cyan, Colors.Gold, TimeSpan.FromMilliseconds(500));
     
-    private ColorAnimation CyanToGold { get; }
     private DoubleAnimation FadeIn { get; }
     internal DoubleAnimation FadeOut { get; }
     
@@ -108,8 +110,6 @@ public partial class OverlayWindow
             To   = 0,
             Duration = FadeOutDuration
         };
-
-        CyanToGold = new ColorAnimation(Colors.Cyan, Colors.Gold, TimeSpan.FromMilliseconds(500));
         
         Left   = SystemParameters.VirtualScreenLeft;
         Top    = SystemParameters.VirtualScreenTop;
@@ -121,18 +121,11 @@ public partial class OverlayWindow
     {
         Log.Info("Start the overlay.");
 
-        var brush = new SolidColorBrush(Colors.Cyan);
-        CountText.Foreground = brush;
+        // todo color
+        CountText.Foreground = new SolidColorBrush(Colors.Cyan);
         CountText.Text = $"{RestSeconds:d2}";
         
         FadeIn.Completed += FadeInCompleted;
-        FadeIn.Completed += (_, _) =>
-        {
-            Dispatcher.Invoke(() =>
-            {
-                brush.BeginAnimation(SolidColorBrush.ColorProperty, CyanToGold);
-            });
-        };
         FadeOut.Completed += FadeOutCompleted;
         BeginAnimation(OpacityProperty, FadeIn);
         // FadeIn.Begin(this);
@@ -177,9 +170,9 @@ public partial class OverlayWindow
             // 回到 UI 线程关闭窗口
             Instance?.Dispatcher.Invoke(async () =>
             {
+                if (Instance.FadeOutStarted) return;
                 Instance.Reason = FinishReason.Forced;
                 Instance.CountText.Foreground = new SolidColorBrush(Colors.OrangeRed);
-                if (Instance.FadeOutStarted) return;
                 await Task.Delay(800);
                 
                 Instance.FadeOutStarted = true;

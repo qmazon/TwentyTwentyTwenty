@@ -43,7 +43,6 @@ public sealed class OverlayTimeController : IDisposable, IAsyncDisposable
             Window.FadeInCompleted += (_, _) =>
             {
                 Log.Info("FadeIn Completed.");
-                
                 _overlayWatch.Start();
             };
             Window.FadeOutCompleted += (_, _) =>
@@ -71,8 +70,14 @@ public sealed class OverlayTimeController : IDisposable, IAsyncDisposable
 
     private void OnOverlayWatchFinished()
     {
+        Log.Debug($"Window should fade out.");
         Window!.FadeOutStarted = true;
-        Window!.Dispatcher.Invoke(() => { Window.BeginAnimation(UIElement.OpacityProperty, Window.FadeOut); });
+        Window!.Dispatcher.InvokeAsync(async () =>
+        {
+            Window.CountText.Foreground.BeginAnimation(SolidColorBrush.ColorProperty, OverlayWindow.CyanToGold);
+            await Task.Delay(800);
+            Window.BeginAnimation(UIElement.OpacityProperty, Window.FadeOut);
+        });
         // 之后会调用FadeOutCompleted
     }
 

@@ -15,10 +15,11 @@
 首次启动后，程序会在`%APPDATA%\TwentyTwentyTwenty\settings.toml`自动生成配置文件，内容如下：
 
 ```toml
-interval_minutes = 20   # 两次休息间隔（分钟）
-rest_seconds     = 20   # 每次休息倒计时（秒）
-fade_in_seconds  = 1.5  # 淡入动画时长（秒）
-fade_out_seconds = 1.5  # 淡出动画时长（秒）
+interval_minutes    = 20   # 两次休息间隔（分钟）
+rest_seconds        = 20   # 每次休息倒计时（秒）
+fade_in_seconds     = 1.5  # 淡入动画时长（秒）
+fade_out_seconds    = 1.5  # 淡出动画时长（秒）
+escape_next_minutes = 2.0  # 被`Ctrl+Alt`退出后下次休息的时间（分钟）
 ```
 
 修改并保存后，重启生效。
