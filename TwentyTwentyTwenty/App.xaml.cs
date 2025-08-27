@@ -9,6 +9,7 @@ using log4net;
 using Microsoft.Win32;
 using TwentyTwentyTwenty.Data;
 using TwentyTwentyTwenty.Overlay;
+using TwentyTwentyTwenty.Util;
 using Timer = System.Timers.Timer;
 
 namespace TwentyTwentyTwenty;
@@ -29,11 +30,10 @@ public partial class App : INotifyPropertyChanged
 
     private static Mutex? _mutex;
     private static bool _mutexOwned;
-    private DateTime _nextTick;
     private TaskbarIcon? _tray;
-    private Timer? _timer;
-
     private string _toolTipText = "20-20-20";
+
+    private AppTimeController _controller = null!;
 
     public string ToolTipText
     {
@@ -60,7 +60,7 @@ public partial class App : INotifyPropertyChanged
             Shutdown();
             return;
         }
-        
+
         _mutex = new Mutex(true, "TwentyTwentyTwenty_SingleInstance", out var createdNew);
         _mutexOwned = createdNew;
         if (!createdNew)
@@ -76,53 +76,31 @@ public partial class App : INotifyPropertyChanged
         _tray = (TaskbarIcon)FindResource("TrayIcon")!;
         _tray.Visibility = Visibility.Visible;
 
-        _timer = new Timer(TimeSpan.FromMinutes(Settings.IntervalMinutes));
-        _timer.Elapsed += (_, _) => Dispatcher.Invoke(ResetAndShow);
-        // 1 秒更新 1 次托盘。timer 被 Dispatcher 引用，不会被 GC
-        _ = new DispatcherTimer(
-            TimeSpan.FromSeconds(1),
-            DispatcherPriority.Normal,
-            (_, _) => UpdateToolTip(),
-            Dispatcher);
-        ResetTimer();
-        
         SystemEvents.SessionSwitch += OnSessionSwitch;
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
-    }
 
-    private static void ShowOverlay()
-    {
-        Log.Info("Method: ShowOverlay");
-        _window?.Close();
-        _window = new OverlayWindow(CurrentApp.Settings);
-        _window.Show();
+        _controller = new AppTimeController(Settings);
+        _controller.TrayTickChanged += span => ToolTipText = $"20-20-20\n剩余时间：{span:mm\\:ss}";
+        _controller.Restart();
     }
 
     private void Exit_Click(object sender, RoutedEventArgs e)
     {
         Log.Info("Exit app.");
-        _timer?.Stop();
+        _controller.Dispose();
         _tray?.Dispose();
         Shutdown();
     }
 
-    private void ResetTimer()
-    {
-        _nextTick = DateTime.Now.AddMilliseconds(_timer!.Interval);
-        _timer.Start();
-    }
-    
     private void OnSessionSwitch(object? sender, SessionSwitchEventArgs e)
     {
         switch (e.Reason)
         {
             case SessionSwitchReason.SessionLock:
                 Log.Info("Workstation locked – pausing timer.");
-                _timer?.Stop();
                 break;
             case SessionSwitchReason.SessionUnlock:
                 Log.Info("Workstation unlocked – resuming timer.");
-                ResetTimer();
                 break;
             case SessionSwitchReason.ConsoleConnect:
             case SessionSwitchReason.ConsoleDisconnect:
@@ -134,47 +112,20 @@ public partial class App : INotifyPropertyChanged
             default:
                 return;
         }
-    }
 
-
-    private void UpdateToolTip()
-    {
-        var left = _nextTick - DateTime.Now;
-        if (left < TimeSpan.Zero) left = TimeSpan.Zero;
-        ToolTipText = $"20-20-20\n剩余时间：{left:mm\\:ss}";
+        _controller.Abort();
     }
 
     private class ResetAndShowCommand : ICommand
     {
-        // null or false is accepted
-        public bool CanExecute(object? parameter)
-        {
-            var instanceIsVisible = OverlayWindow.Instance?.IsVisible;
-            Log.Info(
-                $"Check if able to show (not true for OK): instanceIsVisible is {(object?)instanceIsVisible ?? "Null"}");
-
-            return instanceIsVisible != true;
-        }
-
-        public void Execute(object? parameter)
-        {
-            CurrentApp.ResetAndShow();
-        }
-
+        public bool CanExecute(object? parameter) => AppTimeController.CanShow();
+        public void Execute(object? parameter) => CurrentApp.ResetAndShow();
         public event EventHandler? CanExecuteChanged;
     }
 
     public static ICommand ShowWindowCommand { get; } = new ResetAndShowCommand();
 
-    private void ResetAndShow()
-    {
-        // 1. 计时器归零
-        _timer?.Stop();
-        ResetTimer();
-
-        // 2. 立刻弹出窗口
-        ShowOverlay();
-    }
+    private void ResetAndShow() => _controller.ShowNow();
 
     private static string AppVersion
     {

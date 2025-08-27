@@ -15,6 +15,12 @@ namespace TwentyTwentyTwenty.Overlay;
 /// </summary>
 public partial class OverlayWindow
 {
+    public enum FinishReason
+    {
+        Normal,
+        Forced
+    }
+    
     private readonly AppSettings _settings;
 
     #region Win32
@@ -63,30 +69,25 @@ public partial class OverlayWindow
     internal static OverlayWindow? Instance; // 让钩子回调里能拿到窗口实例
     private static readonly ILog Log = LogManager.GetLogger(typeof(OverlayWindow));
     
-    private int _count;                 // 起始数字
-    private readonly DispatcherTimer _timer;          // 倒计器
-    private bool _fadeStarted;       // 防止重复触发
-    
+    private ColorAnimation CyanToGold { get; }
     private DoubleAnimation FadeIn { get; }
-    private DoubleAnimation FadeOut { get; }
+    internal DoubleAnimation FadeOut { get; }
     
-
     private Duration FadeInDuration => TimeSpan.FromSeconds(_settings.FadeInSeconds);
     private Duration FadeOutDuration => TimeSpan.FromSeconds(_settings.FadeOutSeconds);
     private int RestSeconds => _settings.RestSeconds;
 
+    internal bool FadeOutStarted;
+    internal FinishReason Reason { get; private set; } = FinishReason.Normal;
+    public event EventHandler FadeInCompleted = (_, _) => { };
+    public event EventHandler FadeOutCompleted = (_, _) => { };
+
     public OverlayWindow(AppSettings settings)
     {
         _settings = settings;
-        _count = RestSeconds;
         
         InitializeComponent();
         Instance = this;
-        _timer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(1)
-        };
-        _timer.Tick += Timer_Tick;
 
         Loaded += (_, _) => _hookID = SetHook(HookCallback);
         Closed += (_, _) =>
@@ -107,6 +108,8 @@ public partial class OverlayWindow
             To   = 0,
             Duration = FadeOutDuration
         };
+
+        CyanToGold = new ColorAnimation(Colors.Cyan, Colors.Gold, TimeSpan.FromMilliseconds(500));
         
         Left   = SystemParameters.VirtualScreenLeft;
         Top    = SystemParameters.VirtualScreenTop;
@@ -118,9 +121,19 @@ public partial class OverlayWindow
     {
         Log.Info("Start the overlay.");
 
-        FadeIn.Completed += (_, _) => _timer.Start();
-        FadeOut.Completed += FadeOut_OnCompleted;
-        CountText.Text = RestSeconds.ToString();
+        var brush = new SolidColorBrush(Colors.Cyan);
+        CountText.Foreground = brush;
+        CountText.Text = $"{RestSeconds:d2}";
+        
+        FadeIn.Completed += FadeInCompleted;
+        FadeIn.Completed += (_, _) =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                brush.BeginAnimation(SolidColorBrush.ColorProperty, CyanToGold);
+            });
+        };
+        FadeOut.Completed += FadeOutCompleted;
         BeginAnimation(OpacityProperty, FadeIn);
         // FadeIn.Begin(this);
 
@@ -130,21 +143,6 @@ public partial class OverlayWindow
         var extendedStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
         var res = SetWindowLong(hWnd, GWL_EXSTYLE, extendedStyle | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW);
         if (res == 0) Log.Error($"SetWindowLong 失败，错误码：{Marshal.GetLastWin32Error()}");
-    }
-    
-    private void Timer_Tick(object? sender, EventArgs e)
-    {
-        _count--;
-        CountText.Text = $"{_count:d2}";
-
-        if (_count != 0 || _fadeStarted) return;
-        
-        Log.Info("Timer done. Fade out.");
-        _fadeStarted = true;
-        _timer.Stop();
-
-        BeginAnimation(OpacityProperty, FadeOut);
-        // FadeOut.Begin(this);
     }
 
     #region KeyboardHook
@@ -179,11 +177,12 @@ public partial class OverlayWindow
             // 回到 UI 线程关闭窗口
             Instance?.Dispatcher.Invoke(async () =>
             {
-                Instance._timer.Stop();
+                Instance.Reason = FinishReason.Forced;
                 Instance.CountText.Foreground = new SolidColorBrush(Colors.OrangeRed);
-                if (Instance._fadeStarted) return;
+                if (Instance.FadeOutStarted) return;
                 await Task.Delay(800);
                 
+                Instance.FadeOutStarted = true;
                 Instance.BeginAnimation(OpacityProperty, Instance.FadeOut);
                 // Instance.FadeOut.Begin(Instance);
             });
@@ -192,9 +191,4 @@ public partial class OverlayWindow
         }
 
     #endregion
-
-    private void FadeOut_OnCompleted(object? sender, EventArgs e)
-    {
-        Close();
-    }
 }
