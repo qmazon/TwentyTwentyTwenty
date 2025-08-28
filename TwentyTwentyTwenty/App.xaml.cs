@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
@@ -8,7 +9,6 @@ using Hardcodet.Wpf.TaskbarNotification;
 using log4net;
 using Microsoft.Win32;
 using TwentyTwentyTwenty.Data;
-using TwentyTwentyTwenty.Overlay;
 using TwentyTwentyTwenty.Util;
 using Timer = System.Timers.Timer;
 
@@ -20,7 +20,6 @@ namespace TwentyTwentyTwenty;
 public partial class App : INotifyPropertyChanged
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(App));
-    private static OverlayWindow? _window;
     public static App CurrentApp => (App)Current;
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -143,27 +142,30 @@ public partial class App : INotifyPropertyChanged
         Log.Error($"Unhandled Exception: {e.Exception}");
     }
 
-    private void App_OnExit(object sender, ExitEventArgs e)
+    private void ReleaseMutex()
     {
-        Log.Info("App OnExit");
         SystemEvents.SessionSwitch -= OnSessionSwitch;
 
         if (_mutexOwned)
         {
-            // _mutex!.WaitOne();
             _mutex!.ReleaseMutex();
             _mutexOwned = false;
         }
 
         _mutex?.Dispose();
-        // base.OnExit(e);
+    }
+
+    private void App_OnExit(object sender, ExitEventArgs e)
+    {
+        Log.Info("App OnExit");
+        ReleaseMutex();
     }
 
     private void Config_OnClick(object sender, RoutedEventArgs e)
     {
         try
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            Process.Start(new ProcessStartInfo
             {
                 FileName = AppSettingsLoader.FilePath,
                 UseShellExecute = true
@@ -178,10 +180,29 @@ public partial class App : INotifyPropertyChanged
 
     private void About_OnClick(object sender, RoutedEventArgs e)
     {
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        Process.Start(new ProcessStartInfo
         {
             FileName = "https://github.com/qmazon/TwentyTwentyTwenty",
             UseShellExecute = true
         });
+    }
+
+    private void Restart_OnClick(object sender, RoutedEventArgs e)
+    {
+        var currentExePath = Environment.ProcessPath!;
+        try
+        {
+            ReleaseMutex();
+            Process.Start(currentExePath);
+            Shutdown();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"重启应用程序时出错: {ex.Message}",
+                "错误",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
     }
 }

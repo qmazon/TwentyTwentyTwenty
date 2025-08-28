@@ -10,6 +10,7 @@
         <ContextMenu x:Shared="false" x:Key="TrayMenu">
             <MenuItem Header="立刻休息" Command="{x:Static local:App.ShowWindowCommand}"></MenuItem>
             <MenuItem Header="配置文件" Click="Config_OnClick"></MenuItem>
+            <MenuItem Header="重新启动" Click="Restart_OnClick"></MenuItem>
             <MenuItem Header="关于程序" Click="About_OnClick"></MenuItem>
             <MenuItem Header="{Binding Source={x:Static local:App.AppVersionFormatted}}" IsEnabled="False"></MenuItem>
             <MenuItem Header="退出程序" Click="Exit_Click"/>

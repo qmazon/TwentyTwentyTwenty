@@ -46,6 +46,7 @@ public static class AppSettingsLoader
         }
 
         using var stream = File.OpenRead(FilePath);
-        return CsTomlSerializer.Deserialize<AppSettingsRecord>(stream);
+        var appSettingsRecord = CsTomlSerializer.Deserialize<AppSettingsRecord>(stream);
+        return appSettingsRecord;
     }
 }
