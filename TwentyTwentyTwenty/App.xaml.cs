@@ -94,9 +94,11 @@ public partial class App : INotifyPropertyChanged
         {
             case SessionSwitchReason.SessionLock:
                 Log.Info("Workstation locked – pausing timer.");
+                _controller.Abort();
                 break;
             case SessionSwitchReason.SessionUnlock:
                 Log.Info("Workstation unlocked – resuming timer.");
+                _controller.Restart();
                 break;
             case SessionSwitchReason.ConsoleConnect:
             case SessionSwitchReason.ConsoleDisconnect:
@@ -108,8 +110,6 @@ public partial class App : INotifyPropertyChanged
             default:
                 return;
         }
-
-        _controller.Abort();
     }
 
     private class ResetAndShowCommand : ICommand
