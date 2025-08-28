@@ -122,7 +122,7 @@ public partial class OverlayWindow
         Log.Info("Start the overlay.");
 
         // todo color
-        CountText.Foreground = new SolidColorBrush(Colors.Cyan);
+        CountText.Foreground = new SolidColorBrush(_settings.CountdownColor);
         CountText.Text = $"{RestSeconds:d2}";
         
         FadeIn.Completed += FadeInCompleted;
@@ -172,8 +172,8 @@ public partial class OverlayWindow
             {
                 if (Instance.FadeOutStarted) return;
                 Instance.Reason = FinishReason.Forced;
-                Instance.CountText.Foreground = new SolidColorBrush(Colors.OrangeRed);
-                await Task.Delay(800);
+                Instance.CountText.Foreground = new SolidColorBrush(Instance._settings.FailedColor);
+                await Task.Delay(Instance._settings.RestFinishedColorChangeTime.ToTimeSpan());
                 
                 Instance.FadeOutStarted = true;
                 Instance.BeginAnimation(OpacityProperty, Instance.FadeOut);

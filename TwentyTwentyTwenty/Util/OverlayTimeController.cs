@@ -76,7 +76,7 @@ public sealed class OverlayTimeController : IDisposable, IAsyncDisposable
         {
             Window.CountText.Foreground.BeginAnimation(SolidColorBrush.ColorProperty, Window.AnimationOnSuccess);
             Window.CountText.Foreground.BeginAnimation(SolidColorBrush.ColorProperty, Window.AnimationOnSuccess);
-            await Task.Delay(800);
+            await Task.Delay(_settings.RestFinishedColorChangeTime.ToTimeSpan());
             Window.BeginAnimation(UIElement.OpacityProperty, Window.FadeOut);
         });
         // 之后会调用FadeOutCompleted
