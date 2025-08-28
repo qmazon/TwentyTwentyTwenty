@@ -46,13 +46,13 @@ public partial class App : INotifyPropertyChanged
         }
     }
 
-    private AppSettings Settings { get; set; } = null!;
+    private AppSettingsRecord Settings { get; set; } = null!;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         try
         {
-            Settings = AppSettings.Load();
+            Settings = AppSettingsLoader.Load();
         }
         catch (ArgumentException ex)
         {
@@ -165,7 +165,7 @@ public partial class App : INotifyPropertyChanged
         {
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                FileName = AppSettings.FilePath,
+                FileName = AppSettingsLoader.FilePath,
                 UseShellExecute = true
             });
         }

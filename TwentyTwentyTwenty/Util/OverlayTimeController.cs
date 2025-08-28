@@ -10,7 +10,7 @@ public sealed class OverlayTimeController : IDisposable, IAsyncDisposable
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(OverlayTimeController));
 
-    private readonly AppSettings _settings;
+    private readonly AppSettingsRecord _settings;
 
     public event Action<OverlayWindow.FinishReason> OverlayFinished = _ => { };
 
@@ -18,12 +18,12 @@ public sealed class OverlayTimeController : IDisposable, IAsyncDisposable
 
     private OverlayWindow? Window { get; set; }
 
-    public OverlayTimeController(AppSettings settings)
+    public OverlayTimeController(AppSettingsRecord settings)
     {
         _settings = settings;
 
         _overlayWatch = new CountdownTimer(
-            TimeSpan.FromSeconds(settings.RestSeconds),
+            settings.RestTime.ToTimeSpan(),
             TimeSpan.FromSeconds(1.0)
         );
         _overlayWatch.Elapsed += span => SetOverlayTick(Convert.ToInt32(Math.Round(span.TotalSeconds)));
@@ -74,7 +74,8 @@ public sealed class OverlayTimeController : IDisposable, IAsyncDisposable
         Window!.FadeOutStarted = true;
         Window!.Dispatcher.InvokeAsync(async () =>
         {
-            Window.CountText.Foreground.BeginAnimation(SolidColorBrush.ColorProperty, OverlayWindow.CyanToGold);
+            Window.CountText.Foreground.BeginAnimation(SolidColorBrush.ColorProperty, Window.AnimationOnSuccess);
+            Window.CountText.Foreground.BeginAnimation(SolidColorBrush.ColorProperty, Window.AnimationOnSuccess);
             await Task.Delay(800);
             Window.BeginAnimation(UIElement.OpacityProperty, Window.FadeOut);
         });

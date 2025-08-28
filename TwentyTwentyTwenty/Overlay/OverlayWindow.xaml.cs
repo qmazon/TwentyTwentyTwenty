@@ -21,7 +21,7 @@ public partial class OverlayWindow
         Forced
     }
     
-    private readonly AppSettings _settings;
+    private readonly AppSettingsRecord _settings;
 
     #region Win32
 
@@ -68,23 +68,22 @@ public partial class OverlayWindow
     private static IntPtr _hookID = IntPtr.Zero;
     internal static OverlayWindow? Instance; // 让钩子回调里能拿到窗口实例
     private static readonly ILog Log = LogManager.GetLogger(typeof(OverlayWindow));
-
-    // todo color
-    internal static ColorAnimation CyanToGold { get; } = new(Colors.Cyan, Colors.Gold, TimeSpan.FromMilliseconds(500));
+    
+    internal ColorAnimation AnimationOnSuccess { get; }
     
     private DoubleAnimation FadeIn { get; }
     internal DoubleAnimation FadeOut { get; }
     
-    private Duration FadeInDuration => TimeSpan.FromSeconds(_settings.FadeInSeconds);
-    private Duration FadeOutDuration => TimeSpan.FromSeconds(_settings.FadeOutSeconds);
-    private int RestSeconds => _settings.RestSeconds;
+    private Duration FadeInDuration => _settings.FadeInTime.ToTimeSpan();
+    private Duration FadeOutDuration => _settings.FadeOutTime.ToTimeSpan();
+    private int RestSeconds => (int)Math.Round(_settings.RestTime.ToTimeSpan().TotalSeconds);
 
     internal bool FadeOutStarted;
     internal FinishReason Reason { get; private set; } = FinishReason.Normal;
     public event EventHandler FadeInCompleted = (_, _) => { };
     public event EventHandler FadeOutCompleted = (_, _) => { };
 
-    public OverlayWindow(AppSettings settings)
+    public OverlayWindow(AppSettingsRecord settings)
     {
         _settings = settings;
         
@@ -96,7 +95,8 @@ public partial class OverlayWindow
         {
             if (_hookID != IntPtr.Zero) UnhookWindowsHookEx(_hookID);
         };
-        
+
+        AnimationOnSuccess = new ColorAnimation(_settings.CountdownColor, _settings.SuccessColor, TimeSpan.FromMilliseconds(500));
         FadeIn = new DoubleAnimation
         {
             From = 0,

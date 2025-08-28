@@ -11,22 +11,22 @@ public sealed class AppTimeController : IDisposable, IAsyncDisposable
     
     public event Action<TimeSpan> TrayTickChanged = _ => { };
 
-    private readonly AppSettings _settings;
+    private readonly AppSettingsRecord _settings;
     private readonly CountdownTimer _restWatch;
     private readonly CountdownTimer _escapeWatch;
 
-    public AppTimeController(AppSettings settings)
+    public AppTimeController(AppSettingsRecord settings)
     {
         _settings = settings;
         _restWatch = new CountdownTimer(
-            TimeSpan.FromMinutes(settings.IntervalMinutes),
+            settings.IntervalTime.ToTimeSpan(),
             TimeSpan.FromSeconds(1.0)
         );
         _restWatch.Elapsed += SetTrayTick;
         _restWatch.Finished += ShowOverlay;
 
         _escapeWatch = new CountdownTimer(
-            TimeSpan.FromMinutes(settings.EscapeNextMinutes),
+            settings.EscapeNextTime.ToTimeSpan(),
             TimeSpan.FromSeconds(1.0)
         );
         _escapeWatch.Elapsed += SetTrayTick;
