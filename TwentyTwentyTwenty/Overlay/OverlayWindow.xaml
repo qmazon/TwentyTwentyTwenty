@@ -17,7 +17,7 @@
         Title="OverlayWindow"
         Loaded="OverlayWindow_Loaded" >
 
-    <Grid Background="#60000000">
+    <Grid x:Name="Grid">
         <Border CornerRadius="16"
                 Background="#80000000"
                 Margin="32"

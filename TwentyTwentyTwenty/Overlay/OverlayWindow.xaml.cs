@@ -121,7 +121,8 @@ public partial class OverlayWindow
     {
         Log.Info("Start the overlay.");
 
-        // todo color
+        Grid.Background = new SolidColorBrush(Color.FromArgb(_settings.Invisibility, 0, 0, 0));
+        
         CountText.Foreground = new SolidColorBrush(_settings.CountdownColor);
         CountText.Text = $"{RestSeconds:d2}";
         

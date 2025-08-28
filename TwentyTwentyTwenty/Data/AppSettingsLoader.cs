@@ -23,10 +23,13 @@ public static class AppSettingsLoader
     {
         var appendix = """
                        # 颜色表示方式：
-                       # + Color = "Red"
-                       # + Color = "#FFFF0000"
-                       # + Color = 0xFFFF0000
-                       # 可用颜色列表：参见https://learn.microsoft.com/en-us/dotnet/media/art-color-table.png
+                       # 1. Color = "Red"
+                       # 2. Color = "#FFFF0000"
+                       # 3. Color = 0xFFFF0000
+                       # 方法1.的可用颜色列表：参见https://learn.microsoft.com/en-us/dotnet/media/art-color-table.png
+                       #
+                       # Invisibility 应该是一个介于0到255（包含）的整数。您也可以写作0x00到0xFF。
+                       # 
                        """u8;
 
         var result = CsTomlSerializer.Serialize(settings);
