@@ -41,7 +41,7 @@ public partial record AppSettingsRecord
         private static Color GetColorByName(string name) =>
             (Color)(ColorProps
                 .FirstOrDefault(it => it.Name == name)
-                ?.GetValue(null) ?? default(Color));
+                ?.GetValue(null) ?? throw new ArgumentException($"无效颜色：{name}。"));
 
         private static string GetNameByColor(Color color) =>
             ColorProps
@@ -59,7 +59,7 @@ public partial record AppSettingsRecord
 
         public Color Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
         {
-            if (!rootNode.HasValue) return default;
+            if (!rootNode.HasValue) throw new ArgumentException("颜色为空。");
             switch (rootNode.ValueType)
             {
                 case TomlValueType.String:
@@ -73,10 +73,15 @@ public partial record AppSettingsRecord
                     }
                     catch (Exception)
                     {
-                        return default;
+                        throw new ArgumentException($"无效颜色：{colorStr}。");
                     }
                 case TomlValueType.Integer:
-                    var colorInt2 = (uint)(rootNode.GetInt64() & 0xFFFFFFFF);
+                    var num = (ulong)rootNode.GetInt64();
+                    if ((num & 0xFFFFFFFF) != num)
+                    {
+                        throw new ArgumentException($"无效颜色：0x{num:x}。");
+                    }
+                    var colorInt2 = (uint)num;
                     return GetColorByArgbInt(colorInt2);
                 case TomlValueType.Key:
                 case TomlValueType.Empty:

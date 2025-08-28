@@ -49,13 +49,10 @@ public partial class App : INotifyPropertyChanged
 
     protected override void OnStartup(StartupEventArgs e)
     {
-        try
+        Settings = AppSettingsLoader.Load(out var errors);
+        if (errors.Count != 0)
         {
-            Settings = AppSettingsLoader.Load();
-        }
-        catch (ArgumentException ex)
-        {
-            MessageBox.Show(ex.Message, "配置错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(string.Join('\n', errors), "配置错误", MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
             return;
         }

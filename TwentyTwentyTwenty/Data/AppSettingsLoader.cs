@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using CsToml;
+using CsToml.Error;
 using CsToml.Formatter.Resolver;
 
 namespace TwentyTwentyTwenty.Data;
@@ -38,18 +39,46 @@ public static class AppSettingsLoader
         stream.Write(appendix);
     }
 
-    public static AppSettingsRecord Load()
+    public static AppSettingsRecord Load(out List<string> errors)
     {
         if (!File.Exists(FilePath))
         {
             var settings = new AppSettingsRecord();
             Directory.CreateDirectory(DirPath);
             WriteToFile(settings, new FileInfo(FilePath));
+            errors = [];
             return settings;
         }
 
         using var stream = File.OpenRead(FilePath);
-        var appSettingsRecord = CsTomlSerializer.Deserialize<AppSettingsRecord>(stream);
-        return appSettingsRecord;
+        errors = [];
+        try
+        {
+            var appSettingsRecord = CsTomlSerializer.Deserialize<AppSettingsRecord>(stream);
+            AppSettingsChecker.Validate(appSettingsRecord, out errors);
+            return appSettingsRecord;
+        }
+        catch (CsTomlSerializeException exception)
+        {
+            errors.AddRange(
+                exception.ParseExceptions!
+                    .Select(e => $"行号{e.LineNumber}: {e.InnerException?.Message ?? "未知错误。"}")
+            );
+            if (exception.InnerException is not null)
+            {
+                errors.Add("某处：" + exception.InnerException.Message);
+            }
+        }
+        catch (ArgumentException exception)
+        {
+            errors.Add("某处：" + exception.Message);
+        }
+        catch (Exception exception)
+        {
+            errors.Add("发生内部错误，请报告给作者：\n" + exception);
+        }
+
+        // 返回值不会被使用，程序会立即退出，因此我们可以返回null。
+        return null!;
     }
 }

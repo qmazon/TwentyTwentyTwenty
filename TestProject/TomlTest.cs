@@ -5,7 +5,7 @@ using TwentyTwentyTwenty.Data;
 
 namespace TestProject;
 
-public class Tests
+public class TomlTest
 {
     [SetUp]
     public void Setup()
