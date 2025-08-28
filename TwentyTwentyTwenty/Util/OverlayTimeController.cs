@@ -6,6 +6,14 @@ using TwentyTwentyTwenty.Overlay;
 
 namespace TwentyTwentyTwenty.Util;
 
+/// <summary>
+/// 整体的流程：<br/>
+/// 1. 被 <see cref="AppTimeController"/> 唤醒<br/>
+/// 2. 启动 OverlayWatch，其 Elapsed 事件被订阅，会更改 Window 的显示的 Tick
+/// 3. OverlayWatch 的 Finished 事件被这个类订阅，在其中会触发 Window.FadeOut 动画
+/// 4. FadeOut 动画的 Completed 事件被这个类订阅，触发 <see cref="AppTimeController"/> 的 OverlayFinished 事件
+/// 5. 如果窗口被用户强制取消，则不会触发步骤 3.，直接进行步骤 4.。
+/// </summary>
 public sealed class OverlayTimeController : IDisposable, IAsyncDisposable
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(OverlayTimeController));

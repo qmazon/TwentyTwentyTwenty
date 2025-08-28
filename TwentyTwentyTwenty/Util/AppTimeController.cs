@@ -5,6 +5,13 @@ using TwentyTwentyTwenty.Overlay;
 
 namespace TwentyTwentyTwenty.Util;
 
+/// <summary>
+/// 整体的流程：<br/>
+/// 1. 启动 RestWatch<br/>
+/// 2. RestWatch 的 Elapsed 事件被 App 订阅，会更改托盘里展示的内容<br/>
+/// 3. RestWatch 的 Finished 事件会调用 <see cref="OverlayTimeController"/>，之后交给其管理<br/>
+/// 4. <see cref="OverlayTimeController"/> 的 OverlayFinished 事件会引起新一轮的 RestWatch 或者 EscapeWatch 的启动<br/>
+/// </summary>
 public sealed class AppTimeController : IDisposable, IAsyncDisposable
 {
     private static readonly ILog Log = LogManager.GetLogger(typeof(AppTimeController));
@@ -37,6 +44,7 @@ public sealed class AppTimeController : IDisposable, IAsyncDisposable
     {
         _restWatch.Cancel();
         _escapeWatch.Cancel();
+        SetTrayTick(TimeSpan.Zero);
     }
 
     public void Restart()

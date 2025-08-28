@@ -13,7 +13,7 @@ public class CountdownTimer : IDisposable
     private readonly TimeSpan _interval;
     private Timer? _timer;
     private DateTime _startTime;
-    private int _expectedElapsedCount;
+    private readonly int _expectedElapsedCount;
     private int _currentElapsedCount;
     private readonly Lock _lock = new();
 

@@ -11,24 +11,54 @@ namespace TwentyTwentyTwenty.Data;
 [TomlSerializedObject]
 public partial record AppSettingsRecord
 {
+    /// <summary>
+    /// 两次休息的间隔时间
+    /// </summary>
     [TomlValueOnSerialized] public TimeOnly IntervalTime { get; init; } = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(20.0));
 
+    /// <summary>
+    /// 强制退出休息后，下次休息的时间
+    /// </summary>
     [TomlValueOnSerialized] public TimeOnly EscapeNextTime { get; init; } = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(2.0));
 
+    /// <summary>
+    /// 休息的时间
+    /// </summary>
     [TomlValueOnSerialized] public TimeOnly RestTime { get; init; } = TimeOnly.FromTimeSpan(TimeSpan.FromSeconds(20.0));
 
+    /// <summary>
+    /// 动画 FadeIn 的时间
+    /// </summary>
     [TomlValueOnSerialized] public TimeOnly FadeInTime { get; init; } = TimeOnly.FromTimeSpan(TimeSpan.FromSeconds(1.0));
 
+    /// <summary>
+    /// 动画 FadeOut 的时间
+    /// </summary>
     [TomlValueOnSerialized] public TimeOnly FadeOutTime { get; init; } = TimeOnly.FromTimeSpan(TimeSpan.FromSeconds(0.8));
 
+    /// <summary>
+    /// 即将退出休息时的颜色改变动画的时间
+    /// </summary>
     [TomlValueOnSerialized] public TimeOnly RestFinishedColorChangeTime { get; init; } = TimeOnly.FromTimeSpan(TimeSpan.FromSeconds(0.8));
 
+    /// <summary>
+    /// 倒计时的颜色
+    /// </summary>
     [TomlValueOnSerialized] public Color CountdownColor { get; init; } = Colors.Cyan;
 
+    /// <summary>
+    /// 强制退出休息时倒计时的颜色
+    /// </summary>
     [TomlValueOnSerialized] public Color FailedColor { get; init; } = Colors.OrangeRed;
 
+    /// <summary>
+    /// 倒计时正常结束的颜色
+    /// </summary>
     [TomlValueOnSerialized] public Color SuccessColor { get; init; } = Colors.Gold;
 
+    /// <summary>
+    /// 蒙板的遮盖程度
+    /// </summary>
     [TomlValueOnSerialized] public byte Invisibility { get; init; } = 0x60;
 
     public class ColorTomlFormatter : ITomlValueFormatter<Color>
@@ -57,6 +87,13 @@ public partial record AppSettingsRecord
             return Color.FromArgb(a, r, g, b);
         }
 
+        /// <summary>
+        /// 略
+        /// </summary>
+        /// <param name="rootNode"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">无效的颜色</exception>
         public Color Deserialize(ref TomlDocumentNode rootNode, CsTomlSerializerOptions options)
         {
             if (!rootNode.HasValue) throw new ArgumentException("颜色为空。");

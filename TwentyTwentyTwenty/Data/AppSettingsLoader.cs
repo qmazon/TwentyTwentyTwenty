@@ -2,11 +2,14 @@
 using CsToml;
 using CsToml.Error;
 using CsToml.Formatter.Resolver;
+using log4net;
 
 namespace TwentyTwentyTwenty.Data;
 
 public static class AppSettingsLoader
 {
+    private static readonly ILog Log = LogManager.GetLogger(typeof(AppSettingsLoader));
+    
     private static readonly string DirPath =
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -44,6 +47,7 @@ public static class AppSettingsLoader
         if (!File.Exists(FilePath))
         {
             var settings = new AppSettingsRecord();
+            Log.Info("Create new config file.");
             Directory.CreateDirectory(DirPath);
             WriteToFile(settings, new FileInfo(FilePath));
             errors = [];
@@ -76,7 +80,10 @@ public static class AppSettingsLoader
         catch (Exception exception)
         {
             errors.Add("发生内部错误，请报告给作者：\n" + exception);
+            Log.Error("Unknown", exception);
         }
+        
+        Log.Info(string.Join('\n', errors));
 
         // 返回值不会被使用，程序会立即退出，因此我们可以返回null。
         return null!;

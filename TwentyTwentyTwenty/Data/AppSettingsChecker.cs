@@ -2,6 +2,17 @@
 
 public static class AppSettingsChecker
 {
+    /// <summary>
+    /// 检查项目列表：<br/>
+    /// + 所有 TimeOnly 都应该为正<br/>
+    /// + EscapeNextTime 小于等于 IntervalTime<br/>
+    /// + EscapeNextTime 和 IntervalTime 都需要大于 RestTime + FadeInTime + FadeOutTime + RestFinishedColorChangeTime<br/>
+    /// + FadeInTime 和 FadeOutTime需要小于等于 5.0秒<br/>
+    /// + IntervalTime 和 EscapeNextTime 需要是 1~99秒（包含）之间的数据。必须是整秒数，不能有毫秒
+    /// </summary>
+    /// <param name="settings"></param>
+    /// <param name="errors"></param>
+    /// <returns>通过检查则返回 True，否则 False</returns>
     public static bool Validate(AppSettingsRecord settings, out List<string> errors)
     {
         var errorList = new List<string>();
